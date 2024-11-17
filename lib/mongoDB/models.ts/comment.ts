@@ -1,5 +1,5 @@
 import { commentT } from "@/lib/types/comment";
-import mongoose, { Schema } from "mongoose";
+import { model, models, Schema } from "mongoose";
 
 const commentSchema = new Schema<commentT>(
   {
@@ -14,4 +14,6 @@ const commentSchema = new Schema<commentT>(
   { timestamps: true }
 );
 
-export const Comment = mongoose.model<commentT>("Comment", commentSchema);
+// Check if the model already exists; if not, create it
+export const Comment =
+  models.Comment || model<commentT>("Comment", commentSchema);

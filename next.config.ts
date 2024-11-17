@@ -14,7 +14,11 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: ".windows.net",
+        hostname: "windows.net",
+      },
+      {
+        protocol: "https",
+        hostname: "images.pexels.com",
       },
     ],
   },

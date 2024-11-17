@@ -1,7 +1,6 @@
 import { commentT } from "@/lib/types/comment";
 import { postDocumentT, postModelT } from "@/lib/types/post";
-import { models, Schema } from "mongoose";
-import mongoose from "mongoose";
+import { model, models, Schema } from "mongoose";
 import { Comment } from "./comment";
 
 const postSchema = new Schema<postDocumentT>(
@@ -12,7 +11,7 @@ const postSchema = new Schema<postDocumentT>(
       firstName: { type: String, required: true },
       lastName: { type: String },
     },
-    text: { types: String, required: true },
+    text: { type: String, required: true },
     imageUrl: { type: String },
     comments: { type: [Schema.Types.ObjectId], ref: "comment", default: [] },
     likes: { type: String },
@@ -92,4 +91,4 @@ postSchema.statics.getAllPosts = async function () {
 
 export const Post =
   (models.Post as unknown as postModelT) ||
-  mongoose.model<postDocumentT, postModelT>("Post", postSchema);
+  model<postDocumentT, postModelT>("Post", postSchema);

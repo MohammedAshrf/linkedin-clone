@@ -1,14 +1,17 @@
 import mongoose from "mongoose";
 
-const mongoDbConnection = process.env.MONGODB_CONNECTION;
+const mongoDbConnection = process.env.MONGODB_CONNECTOIN;
 
 if (!mongoDbConnection) {
-  throw new Error("please provide a valid connection string");
+  // console.log(mongoDbConnection);
+  throw new Error(
+    "please provide a valid connection string " + mongoDbConnection
+  );
 }
 
-async function connectDB() {
+export async function connectDB() {
   if (mongoose.connection?.readyState >= 1) {
-    // console.log("-----Already connected to mongoDB")
+    // console.log("----- Already connected to mongoDB -----")
     return;
   }
 
