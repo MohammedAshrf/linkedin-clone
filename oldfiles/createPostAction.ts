@@ -1,10 +1,8 @@
 "use server";
 import { currentUser } from "@clerk/nextjs/server";
-// import { userT } from "@/lib/types/user";
+import { userT } from "@/lib/types/user";
 import { Post } from "../mongoDB/models.ts/post";
-import { IUser } from "../types/user";
-import { AddPostRequestBody } from "@/app/api/posts/route";
-// import { addPostRequestT } from "../types/addPostRequest";
+import { addPostRequestT } from "../types/addPostRequest";
 
 export default async function createPostAction(formData: FormData) {
   const user = await currentUser();
@@ -22,7 +20,7 @@ export default async function createPostAction(formData: FormData) {
   }
 
   // define user
-  const userDB: IUser = {
+  const userDB: userT = {
     userId: user.id,
     userImage: user.imageUrl,
     firstName: user.firstName || "",
@@ -33,7 +31,7 @@ export default async function createPostAction(formData: FormData) {
     if (image && image.size > 0) {
       //1.  Upload image if there is one.
       //2. create post in database with the image url
-      const body: AddPostRequestBody = {
+      const body: addPostRequestT = {
         user: userDB,
         text: postInput,
         // imageUrl: image.name,
@@ -43,7 +41,7 @@ export default async function createPostAction(formData: FormData) {
     } else {
       // create post in the database
 
-      const body: AddPostRequestBody = {
+      const body: addPostRequestT = {
         user: userDB,
         text: postInput,
       };

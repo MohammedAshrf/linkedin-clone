@@ -24,7 +24,7 @@ export default function PostForm() {
     ref.current?.reset();
 
     const text = formDataCopy.get("postInput") as string;
-    const image = formDataCopy.get("postImage") as File | null;
+    // const image = formDataCopy.get("postImage") as File | null;
 
     if (!text.trim()) {
       throw new Error("You must provide a post input");

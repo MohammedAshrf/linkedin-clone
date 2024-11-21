@@ -1,7 +1,17 @@
-import { commentT } from "@/lib/types/comment";
-import { model, models, Schema } from "mongoose";
+import mongoose, { Schema, Document, models } from "mongoose";
+import { IUser } from "@/lib/types/user";
 
-const commentSchema = new Schema<commentT>(
+export interface ICommentBase {
+  user: IUser;
+  text: string;
+}
+
+export interface IComment extends Document, ICommentBase {
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const CommentSchema = new Schema<IComment>(
   {
     user: {
       userId: { type: String, required: true },
@@ -11,9 +21,10 @@ const commentSchema = new Schema<commentT>(
     },
     text: { type: String, required: true },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
-// Check if the model already exists; if not, create it
 export const Comment =
-  models.Comment || model<commentT>("Comment", commentSchema);
+  models.Comment || mongoose.model<IComment>("Comment", CommentSchema);

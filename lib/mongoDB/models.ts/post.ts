@@ -1,9 +1,40 @@
-import { commentT } from "@/lib/types/comment";
-import { postDocumentT, postModelT } from "@/lib/types/post";
-import { model, models, Schema } from "mongoose";
-import { Comment } from "./comment";
+// post.ts
+import mongoose, { Schema, Document, models, Model } from "mongoose";
+import { Comment, IComment, ICommentBase } from "./comment";
+import { IUser } from "@/lib/types/user";
 
-const postSchema = new Schema<postDocumentT>(
+export interface IPostBase {
+  user: IUser;
+  text: string;
+  imageUrl?: string;
+  comments?: IComment[];
+  likes?: string[];
+}
+
+export interface IPost extends IPostBase, Document {
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Define the document methods (for each instance of a post)
+interface IPostMethods {
+  likePost(userId: string): Promise<void>;
+  unlikePost(userId: string): Promise<void>;
+  commentOnPost(comment: ICommentBase): Promise<void>;
+  getAllComments(): Promise<IComment[]>;
+  removePost(): Promise<void>;
+}
+
+// Define the static methods
+interface IPostStatics {
+  getAllPosts(): Promise<IPostDocument[]>;
+}
+
+// Merge the document methods, and static methods with IPost
+export interface IPostDocument extends IPost, IPostMethods {}
+interface IPostModel extends IPostStatics, Model<IPostDocument> {}
+
+const PostSchema = new Schema<IPostDocument>(
   {
     user: {
       userId: { type: String, required: true },
@@ -13,82 +44,86 @@ const postSchema = new Schema<postDocumentT>(
     },
     text: { type: String, required: true },
     imageUrl: { type: String },
-    comments: { type: [Schema.Types.ObjectId], ref: "comment", default: [] },
-    likes: { type: String },
+    comments: { type: [Schema.Types.ObjectId], ref: "Comment", default: [] },
+    likes: { type: [String] },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
-postSchema.methods.likePost = async function (userId: string) {
+PostSchema.methods.likePost = async function (userId: string) {
   try {
     await this.updateOne({ $addToSet: { likes: userId } });
-  } catch (err) {
-    console.log("error while liking post " + err);
+  } catch (error) {
+    console.log("error when liking post", error);
   }
 };
 
-postSchema.methods.unLikePost = async function (userId: string) {
+PostSchema.methods.unlikePost = async function (userId: string) {
   try {
     await this.updateOne({ $pull: { likes: userId } });
-  } catch (err) {
-    console.log("error while unliking post " + err);
+  } catch (error) {
+    console.log("error when unliking post", error);
   }
 };
 
-postSchema.methods.removePost = async function () {
+PostSchema.methods.removePost = async function () {
   try {
     await this.model("Post").deleteOne({ _id: this._id });
-  } catch (err) {
-    console.log("error while removing post ", err);
+  } catch (error) {
+    console.log("error when removing post", error);
   }
 };
 
-postSchema.methods.commentOnPost = async function (commentToAdd: commentT) {
+PostSchema.methods.commentOnPost = async function (commentToAdd: ICommentBase) {
   try {
     const comment = await Comment.create(commentToAdd);
     this.comments.push(comment._id);
     await this.save();
-  } catch (err) {
-    console.log("error while commenting on post ", err);
+  } catch (error) {
+    console.log("error when commenting on post", error);
   }
 };
 
-postSchema.methods.getAllComments = async function () {
-  try {
-    await this.populate({
-      path: "comments",
-      // sort comments by newest first
-      optoins: { sort: { createdAt: -1 } },
-    });
-    return this.comments;
-  } catch (err) {
-    console.log("error while getting all comments ", err);
-  }
-};
-
-postSchema.statics.getAllPosts = async function () {
+PostSchema.statics.getAllPosts = async function () {
   try {
     const posts = await this.find()
       .sort({ createdAt: -1 })
       .populate({
         path: "comments",
-        // sort comments by newest first
-        optoins: { sort: { createdAt: -1 } },
+
+        options: { sort: { createdAt: -1 } },
       })
-      .lean(); // lean() to convert mongoose objects to plain js objects
-    return posts.map((post: postDocumentT) => ({
+      .populate("likes")
+      .lean(); // lean() returns a plain JS object instead of a mongoose document
+
+    return posts.map((post: IPostDocument) => ({
       ...post,
-      _id: post._id.toString(),
-      comments: post.comments?.map((comment: commentT) => ({
+      _id: post._id?.toString(),
+      comments: post.comments?.map((comment: IComment) => ({
         ...comment,
-        _id: comment._id.toString(),
+        _id: comment._id?.toString(),
       })),
     }));
-  } catch (err) {
-    console.log("error while getting all posts ", err);
+  } catch (error) {
+    console.log("error when getting all posts", error);
+  }
+};
+
+PostSchema.methods.getAllComments = async function () {
+  try {
+    await this.populate({
+      path: "comments",
+
+      options: { sort: { createdAt: -1 } },
+    });
+    return this.comments;
+  } catch (error) {
+    console.log("error when getting all comments", error);
   }
 };
 
 export const Post =
-  (models.Post as unknown as postModelT) ||
-  model<postDocumentT, postModelT>("Post", postSchema);
+  (models.Post as IPostModel) ||
+  mongoose.model<IPostDocument, IPostModel>("Post", PostSchema);

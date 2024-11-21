@@ -1,22 +1,17 @@
 import connectDB from "@/lib/mongoDB/db";
-import { IPostBase, Post } from "@/lib/mongoDB/models.ts/post";
-import { IUser } from "@/lib/types/user";
+import { Post } from "@/lib/mongoDB/models.ts/post";
+import { addPostRequestT } from "@/lib/types/addPostRequest";
+import { postBaseT } from "@/oldfiles/post";
 import { NextResponse } from "next/server";
-
-export interface AddPostRequestBody {
-  user: IUser;
-  text: string;
-  imageUrl?: string | null;
-}
 
 export async function POST(request: Request) {
   //  auth().protect();
-  const { user, text, imageUrl }: AddPostRequestBody = await request.json();
+  const { user, text, imageUrl }: addPostRequestT = await request.json();
 
   try {
     await connectDB();
 
-    const postData: IPostBase = {
+    const postData: postBaseT = {
       user,
       text,
       ...(imageUrl && { imageUrl }),
@@ -40,22 +35,9 @@ export async function GET() {
 
     return NextResponse.json(posts);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  } catch (error) {
-    // return NextResponse.json(
-    //   { error: "An error occurred while fetching posts" + error },
-    //   { status: 500 }
-    // );
-
-    // console.error("Error while fetching posts:", error); // Log the error to debug
-    // return new Response(
-    //   JSON.stringify({ error: "An error occurred while fetching posts" }),
-    //   {
-    //     status: 500,
-    //   }
-    // );
-
+  } catch (err) {
     return NextResponse.json(
-      { error: `An error occurred while fetching posts ${error}` },
+      { err: "An error occurred while fetching posts" },
       { status: 500 }
     );
   }
